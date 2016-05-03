@@ -13,7 +13,7 @@ HAS_REL_PATH_RE = re.compile(r"\.?\.?\/");
 reqLine = re.compile("(?:\/\/)?(?:\/\*)?(?: )?var [A-Z]\w*(?: )=(?: )(?:app)?[rR]equire\('[^ ']*'\);(?: *)(?:\*\/)?(?: *)");
 reqIgnore = re.compile("(?:\/\/)?(?:\/\*)?(?: )?var [a-z]\w*(?: )=(?: )(?:app)?[rR]equire\('[^ ']*'\);(?: *)(?:\*\/)?(?: *)");
 esLintLine = re.compile("^\/\* eslint-disable.*\*\/$");
-reqName = re.compile(".*var (\w*)(?: )=.*");
+reqName = re.compile(".*var (\w*).*");
 
 class ModuleLoader():
   def __init__(self, file_name):
@@ -202,6 +202,7 @@ class appRequireCommand(sublime_plugin.TextCommand):
         'module': module,
         'pos': self.view.sel()[0].begin(),
         'highlight':1,
+        'pad':0,
       }
     });
     
@@ -230,11 +231,12 @@ class appRequireInsertHelper(sublime_plugin.TextCommand):
     return module;
 
   def moduleNameFromLine(self, line):
-    print(line);
     line = line.lower();
     match = re.match(reqName, line);
-    print(match.group(1));
-    return match.group(1);
+    if match:
+      return match.group(1);
+    else:
+      return line;
 
   def run (self, edit, args):
     view = self.view
