@@ -1,0 +1,10 @@
+[
+  {
+    "keys": ["ctrl+shift+i"],
+    "command": "app_require"
+  },
+  {
+    "keys": ["ctrl+shift+r"],
+    "command": "app_require_doc"
+  },
+]
