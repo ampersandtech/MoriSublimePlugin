@@ -4,7 +4,7 @@
     "command": "app_require"
   },
   {
-    "keys": ["ctrl+shift+r"],
+    "keys": ["ctrl+shift+p"],
     "command": "app_require_doc"
   },
 ]
