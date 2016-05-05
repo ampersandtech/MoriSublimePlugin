@@ -10,10 +10,11 @@ import json
 import sublime, sublime_plugin
 
 HAS_REL_PATH_RE = re.compile(r"\.?\.?\/");
-reqLine = re.compile("(?:\/\/)?(?:\/\*)?(?: )?var [A-Z]\w*(?: )=(?: )(?:app)?[rR]equire\('[^ ']*'\);(?: *)(?:\*\/)?(?: *)");
-reqIgnore = re.compile("(?:\/\/)?(?:\/\*)?(?: )?var [a-z]\w*(?: )=(?: )(?:app)?[rR]equire\('[^ ']*'\);(?: *)(?:\*\/)?(?: *)");
+reqLine = re.compile("(?:\/\/)?(?:\/\*)?(?: )*var [A-Z]\w*(?: )=(?: )(?:app)?[rR]equire\('[^ ']*'\);(?: *)(?:\*\/)?(?: *)");
+reqIgnore = re.compile("(?:\/\/)?(?:\/\*)?(?: )*var [a-z]\w*(?: )=(?: )(?:app)?[rR]equire\('[^ ']*'\);(?: *)(?:\*\/)?(?: *)");
 esLintLine = re.compile("^\/\* eslint-disable.*\*\/$");
 reqName = re.compile(".*var (\w*).*");
+tabLength = re.compile("^( *).*$");
 
 class ModuleLoader():
   def __init__(self, file_name):
@@ -158,7 +159,6 @@ class appRequireDocCommand(sublime_plugin.TextCommand):
     while (pos < self.view.size()):
       area = self.view.line(pos);
       line = self.view.substr(area);
-      line.strip();
 
       if re.match(reqLine, line):
         break;
@@ -256,11 +256,16 @@ class appRequireInsertHelper(sublime_plugin.TextCommand):
 
     linepos = view.line(pos);
     line = view.substr(linepos);
-    
+    tabs = re.match(tabLength, line);
 
-    if line == '' or re.match(reqLine, line):
+    if (tabs):
+      tabs = tabs.group(1);
+    else:
+      tabs = '';
+
+    if line.strip() == '' or re.match(reqLine, line):
       
-      entry = 'var ' + self.varNameFromModule(module) + ' = ' + entry;
+      entry = tabs + 'var ' + self.varNameFromModule(module) + ' = ' + entry;
       lines = [entry];
       idx = linepos.a-1;
       replace = linepos;
