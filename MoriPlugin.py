@@ -15,6 +15,7 @@ reqIgnore = re.compile("(?:\/\/)?(?:\/\*)?(?: )*var [a-z]\w*(?: )=(?: )(?:app)?[
 esLintLine = re.compile("^\/\* eslint-disable.*\*\/$");
 reqName = re.compile(".*var (\w*).*");
 tabLength = re.compile("^( *).*$");
+specialChar = re.compile("([^\W_]*)([\W_]+)([\w\d]?)(.*)");
 
 class ModuleLoader():
   def __init__(self, file_name):
@@ -223,9 +224,15 @@ class appRequireInsertHelper(sublime_plugin.TextCommand):
     if (module.find('.') != -1):
       module = module[:module.find('.')];
 
-    while module.find('_') != -1:
-      idx = module.find('_');
-      module = module[:idx] + module[idx+1].upper() + module[idx+2:];
+    count=0;
+    while count<100: #avoid infinate loop
+      match = re.match(specialChar, module);
+      if (match):
+        module = match.group(1) + match.group(3).upper() + match.group(4);
+        count+=1;
+      else:
+        break;
+    
     # cap first letter
     module = module[0].upper() + module[1:];
     return module;
