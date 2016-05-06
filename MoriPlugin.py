@@ -10,12 +10,27 @@ import json
 import sublime, sublime_plugin
 
 HAS_REL_PATH_RE = re.compile(r"\.?\.?\/");
-reqLine = re.compile("(?:\/\/)?(?:\/\*)?(?: )*var [A-Z]\w*(?: )=(?: )(?:app)?[rR]equire\('[^ ']*'\);(?: *)(?:\*\/)?(?: *)");
-reqIgnore = re.compile("(?:\/\/)?(?:\/\*)?(?: )*var [a-z]\w*(?: )=(?: )(?:app)?[rR]equire\('[^ ']*'\);(?: *)(?:\*\/)?(?: *)");
+reqUpperTabbed = re.compile("(?:\/\/)?(?:\/\*)?(?: )*var [A-Z]\w*(?: )=(?: )(?:app)?[rR]equire\('[^ ']*'\);(?: *)(?:\*\/)?(?: *)");
+reqLowerTabbed = re.compile("(?:\/\/)?(?:\/\*)?(?: )*var [a-z]\w*(?: )=(?: )(?:app)?[rR]equire\('[^ ']*'\);(?: *)(?:\*\/)?(?: *)");
+
+reqUpper = re.compile("(?:\/\/ *)?(?:\/\* *)?var [A-Z]\w*(?: )=(?: )(?:app)?[rR]equire\('[^ ']*'\);(?: *)(?:\*\/)?(?: *)");
+reqLower = re.compile("(?:\/\/ *)?(?:\/\* *)?var [a-z]\w*(?: )=(?: )(?:app)?[rR]equire\('[^ ']*'\);(?: *)(?:\*\/)?(?: *)");
 esLintLine = re.compile("^\/\* eslint-disable.*\*\/$");
 reqName = re.compile(".*var (\w*).*");
 tabLength = re.compile("^( *).*$");
 specialChar = re.compile("([^\W_]*)([\W_]+)([\w\d]?)(.*)");
+
+SETTINGS_FILE = "MoriPlugin.sublime-settings";
+
+cores = sublime.load_settings(SETTINGS_FILE).get("core_modules");
+aliasCheck = sublime.load_settings(SETTINGS_FILE).get("alias");
+
+
+for alias in aliasCheck:
+  aliasCheck[alias] = {
+    "regex": re.compile(alias),
+    "changes": aliasCheck[alias],
+  }
 
 class ModuleLoader():
   def __init__(self, file_name):
@@ -72,7 +87,7 @@ class ModuleLoader():
       return []
 
     dirname = os.path.dirname(self.file_name)
-    exclude = ['node_modules', '.git' ,'backups', 'builds', 'branding', 'tmp', 'cache', 'clientcache', 'ios', 's3mirror']
+    exclude = sublime.load_settings(SETTINGS_FILE).get("excludeDirs");
     for root, dirs, files in os.walk(self.project_folder, topdown=True):
       if os.path.samefile(root, self.project_folder):
         dirs[:] = [d for d in dirs if d not in exclude]
@@ -106,8 +121,7 @@ class ModuleLoader():
     dependencies = self.get_dependencies_with_type(
       dependency_types, package_json
     )
-    modules_path = os.path.join(self.project_folder, 'node_modules')
-    #dep_files = self.get_dependency_files(dependencies, modules_path)
+    dependencies += sublime.load_settings(SETTINGS_FILE).get("core_modules");
     return dependencies
 
   def get_dependencies_with_type(self, dependency_types, json):
@@ -147,7 +161,7 @@ class appRequireDocCommand(sublime_plugin.TextCommand):
       self.files, self.on_done_call_func(self.files, self.insertAppRequire));
 
   def insertAppRequire(self, module):
-    pos = self.view.find("^'use strict';$", 0).begin();
+    pos = self.view.find("^'use strict';$", 0).end();
 
     if pos == -1:
       pos = 0;
@@ -157,15 +171,33 @@ class appRequireDocCommand(sublime_plugin.TextCommand):
     lastGoodPos = pos;
     pad = 0;
 
+    isCore = module in cores;
+
     while (pos < self.view.size()):
       area = self.view.line(pos);
       line = self.view.substr(area);
 
-      if re.match(reqLine, line):
-        break;
+      if isCore:
+        print('isCore');
+        if re.match(reqLower, line):
+          print('matched lower', line);
+          break;
 
-      if re.match(reqIgnore, line) or re.match(esLintLine, line):
-        lastGoodPos = area.end()+1;
+        if re.match(reqUpper, line):
+          print('matched upper', line);
+          pos = lastGoodPos;
+          pad = 1;
+          break;
+
+        if re.match(esLintLine, line):
+          lastGoodPos = area.end()+1;
+
+      else:
+        if re.match(reqUpper, line):
+          break;
+
+        if re.match(reqLower, line) or re.match(esLintLine, line):
+          lastGoodPos = area.end()+1;
 
       pos = area.end()+1;
 
@@ -232,9 +264,20 @@ class appRequireInsertHelper(sublime_plugin.TextCommand):
         count+=1;
       else:
         break;
+
+    inCore = module in cores;
+    if inCore == False:
+      #cap first letter of any dependencies or files
+      module = module[0].upper() + module[1:];
     
-    # cap first letter
-    module = module[0].upper() + module[1:];
+    #check for any alias
+    for alias in aliasCheck:
+      m = re.match(aliasCheck[alias]["regex"], module);
+      if m:
+        for i in range(len(aliasCheck[alias]["changes"])-1,-1,-1):
+          module = module[:m.start(i+1)] + aliasCheck[alias]["changes"][i] + module[m.end(i+1):];
+        break;
+
     return module;
 
   def moduleNameFromLine(self, line):
@@ -270,6 +313,11 @@ class appRequireInsertHelper(sublime_plugin.TextCommand):
     else:
       tabs = '';
 
+    if module in cores:
+      reqLine = reqLowerTabbed;
+    else:
+      reqLine = reqUpperTabbed;
+
     if line.strip() == '' or re.match(reqLine, line):
       
       entry = tabs + 'var ' + self.varNameFromModule(module) + ' = ' + entry;
@@ -280,25 +328,26 @@ class appRequireInsertHelper(sublime_plugin.TextCommand):
       if re.match(reqLine, line):
         lines.append(line);
 
-      while idx>=0:
-        line = view.substr(view.line(idx));
-        if re.match(reqLine, line):
-          lines.append(line);
-          replace = replace.cover(view.line(idx));
-          idx = view.line(idx).begin()-1;
+      if args['pad']==0:
+        while idx>=0:
+          line = view.substr(view.line(idx));
+          if re.match(reqLine, line):
+            lines.append(line);
+            replace = replace.cover(view.line(idx));
+            idx = view.line(idx).begin()-1;
 
-        else:
-          break;
+          else:
+            break;
 
-      idx = linepos.b+1;
-      while idx<self.view.size():
-        line = view.substr(view.line(idx));
-        if (re.match(reqLine, line)):
-          lines.append(line);
-          replace = replace.cover(view.line(idx));
-          idx = view.line(idx).end()+1;
-        else:
-          break;
+        idx = linepos.b+1;
+        while idx<self.view.size():
+          line = view.substr(view.line(idx));
+          if (re.match(reqLine, line)):
+            lines.append(line);
+            replace = replace.cover(view.line(idx));
+            idx = view.line(idx).end()+1;
+          else:
+              break;
 
       lines = sorted(set(lines), key=self.moduleNameFromLine);
 

@@ -1,0 +1,48 @@
+{
+  "core_modules": [
+    "assert",
+    "buffer",
+    "cluster",
+    "child_process",
+    "crypto",
+    "dgram",
+    "dns",
+    "domain",
+    "events",
+    "fs",
+    "http",
+    "https",
+    "net",
+    "npm",
+    "os",
+    "path",
+    "punycode",
+    "readline",
+    "stream",
+    "string_decoder",
+    "tls",
+    "url",
+    "util",
+    "vm",
+    "zlib"
+  ],
+
+  "excludeDirs": [
+    "node_modules", 
+    ".git" ,
+    "backups", 
+    "builds", 
+    "branding", 
+    "tmp", 
+    "cache", 
+    "clientcache", 
+    "ios", 
+    "s3mirror"
+  ],
+
+  "alias": {
+    ".*(Db)(?:[A-Z]|$)+.*": ["DB"],
+    "^((?:Client)?(?:Server)?)Util$": [""],
+    "^Log(Common)$": [""]
+  }
+}
