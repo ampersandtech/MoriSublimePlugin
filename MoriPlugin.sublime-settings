@@ -50,5 +50,9 @@
     ".*(Db)(?:[A-Z]|$)+.*": ["DB"],
     "^((?:Client)?(?:Server)?)Util$": [""],
     "^Log(Common)$": [""]
+  },
+
+  "prefix": {
+    ".svg": "SVG"
   }
 }

@@ -24,6 +24,7 @@ SETTINGS_FILE = "MoriPlugin.sublime-settings";
 extensions = sublime.load_settings(SETTINGS_FILE).get("extensions");
 cores = sublime.load_settings(SETTINGS_FILE).get("core_modules");
 aliasCheck = sublime.load_settings(SETTINGS_FILE).get("alias");
+prefix = sublime.load_settings(SETTINGS_FILE).get("prefix");
 
 for alias in aliasCheck:
   aliasCheck[alias] = {
@@ -244,6 +245,8 @@ class appRequireCommand(sublime_plugin.TextCommand):
 
 class appRequireInsertHelper(sublime_plugin.TextCommand):
   def varNameFromModule(self, module):
+    ext = os.path.splitext(module)[1];
+
     if (module.rfind('/') != -1):
       module = module[module.rfind('/')+1:];
 
@@ -271,6 +274,9 @@ class appRequireInsertHelper(sublime_plugin.TextCommand):
         for i in range(len(aliasCheck[alias]["changes"])-1,-1,-1):
           module = module[:m.start(i+1)] + aliasCheck[alias]["changes"][i] + module[m.end(i+1):];
         break;
+    
+    if ext in prefix:
+      module = prefix[ext] + module;
 
     return module;
 
