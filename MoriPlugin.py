@@ -117,8 +117,8 @@ class ModuleLoader():
     package = os.path.join(self.project_folder, 'package.json')
     package_json = json.load(open(package, 'r', encoding='UTF-8'))
     dependency_types = {
-      'dependencies': 'module',
-      'devDependencies': 'development only module',
+      'dependencies': 'project module',
+      'devDependencies': 'dev module',
       'optionalDependencies': 'optional module',
       'electronDependencies': 'electron module',
     }
@@ -138,8 +138,11 @@ class ModuleLoader():
             if dependency_type in json:
                 keys = json[dependency_type].keys();
                 for key in keys:
-                  dependencies.append([key, dependency_types[dependency_type]]);
-                #dependencies += json[dependency_type].keys()
+                  listingElement = [element for element in dependencies if element[0] == key]
+                  if len(listingElement):
+                    listingElement[0][1] += ', ' + dependency_types[dependency_type];
+                  else:
+                    dependencies.append([key, dependency_types[dependency_type]]);
         return dependencies
 
 class appRequireDocCommand(sublime_plugin.TextCommand):
