@@ -109,30 +109,37 @@ class ModuleLoader():
         if not ext in extensions:
           continue;
 
-        local_files.append(file_name)
+        local_files.append([os.path.basename(file_name), file_name])
     return local_files
 
   def get_dependencies(self):
     """Parse the package.json file into a list of dependencies."""
     package = os.path.join(self.project_folder, 'package.json')
     package_json = json.load(open(package, 'r', encoding='UTF-8'))
-    dependency_types = (
-      'dependencies',
-      'devDependencies',
-      'optionalDependencies'
-    )
+    dependency_types = {
+      'dependencies': 'module',
+      'devDependencies': 'development only module',
+      'optionalDependencies': 'optional module',
+      'electronDependencies': 'electron module',
+    }
     dependencies = self.get_dependencies_with_type(
       dependency_types, package_json
-    )
-    dependencies += sublime.load_settings(SETTINGS_FILE).get("core_modules");
-    return dependencies
+    );
+
+    for i in range(0,len(cores), 1):
+      dependencies.append([cores[i], 'core module']);
+
+    return dependencies;
 
   def get_dependencies_with_type(self, dependency_types, json):
         """Common function for adding dependencies (bower or package.json)."""
         dependencies = []
         for dependency_type in dependency_types:
             if dependency_type in json:
-                dependencies += json[dependency_type].keys()
+                keys = json[dependency_type].keys();
+                for key in keys:
+                  dependencies.append([key, dependency_types[dependency_type]]);
+                #dependencies += json[dependency_type].keys()
         return dependencies
 
 class appRequireDocCommand(sublime_plugin.TextCommand):
@@ -142,7 +149,8 @@ class appRequireDocCommand(sublime_plugin.TextCommand):
     sublime.active_window().show_quick_panel(
       self.files, self.on_done_call_func(self.files, self.insertAppRequire));
 
-  def insertAppRequire(self, module):
+  def insertAppRequire(self, fileEntry):
+    module = fileEntry[0];
     pos = self.view.find("^'use strict';$", 0).end();
 
     if pos == -1:
