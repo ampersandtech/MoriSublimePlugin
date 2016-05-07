@@ -222,7 +222,8 @@ class appRequireCommand(sublime_plugin.TextCommand):
     sublime.active_window().show_quick_panel(
       self.files, self.on_done_call_func(self.files, self.insertAppRequire));
 
-  def insertAppRequire(self, module):
+  def insertAppRequire(self, fileEntry):
+    module = fileEntry[0];
     self.view.run_command('app_require_insert_helper', {
       'args': {
         'module': module,
@@ -351,7 +352,8 @@ class appRequireInsertHelper(sublime_plugin.TextCommand):
       self.view.replace(edit, replace, '\n'.join(str(x) for x in lines));
 
       if args['highlight'] == 1:
-        higlight = self.view.find(entry, replace.begin(), sublime.LITERAL);
+        findLine = entry.strip();
+        higlight = self.view.find(findLine, replace.begin(), sublime.LITERAL);
         self.view.sel().clear();
         self.view.sel().add(higlight);
     else:
