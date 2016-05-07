@@ -12,19 +12,18 @@ import sublime, sublime_plugin
 HAS_REL_PATH_RE = re.compile(r"\.?\.?\/");
 reqUpperTabbed = re.compile("(?:\/\/)?(?:\/\*)?(?: )*var [A-Z]\w*(?: )=(?: )(?:app)?[rR]equire\('[^ ']*'\);(?: *)(?:\*\/)?(?: *)");
 reqLowerTabbed = re.compile("(?:\/\/)?(?:\/\*)?(?: )*var [a-z]\w*(?: )=(?: )(?:app)?[rR]equire\('[^ ']*'\);(?: *)(?:\*\/)?(?: *)");
-
 reqUpper = re.compile("(?:\/\/ *)?(?:\/\* *)?var [A-Z]\w*(?: )=(?: )(?:app)?[rR]equire\('[^ ']*'\);(?: *)(?:\*\/)?(?: *)");
 reqLower = re.compile("(?:\/\/ *)?(?:\/\* *)?var [a-z]\w*(?: )=(?: )(?:app)?[rR]equire\('[^ ']*'\);(?: *)(?:\*\/)?(?: *)");
 esLintLine = re.compile("^\/\* eslint-disable.*\*\/$");
 reqName = re.compile(".*var (\w*).*");
 tabLength = re.compile("^( *).*$");
-specialChar = re.compile("([^\W_]*)([\W_]+)([\w\d]?)(.*)");
+specialChar = re.compile("([^\W\d_]+)(\d*)([\W_]?)([\w]?)(.*)");
 
 SETTINGS_FILE = "MoriPlugin.sublime-settings";
 
+extensions = sublime.load_settings(SETTINGS_FILE).get("extensions");
 cores = sublime.load_settings(SETTINGS_FILE).get("core_modules");
 aliasCheck = sublime.load_settings(SETTINGS_FILE).get("alias");
-
 
 for alias in aliasCheck:
   aliasCheck[alias] = {
@@ -106,6 +105,10 @@ class ModuleLoader():
         if file_name[0] is '.' and file_name[1] is not '/':
           continue;
 
+        ext = os.path.splitext(file_name)[1];
+        if not ext in extensions:
+          continue;
+
         local_files.append(file_name)
     return local_files
 
@@ -131,27 +134,6 @@ class ModuleLoader():
             if dependency_type in json:
                 dependencies += json[dependency_type].keys()
         return dependencies
-
-  def get_dependency_files(self, dependencies, modules_path):
-    """Walk through deps to allow requiring of files in deps package."""
-    files_to_return = []
-    for dependency in dependencies:
-      module_path = os.path.join(modules_path, dependency)
-      if not os.path.exists(module_path):
-        continue
-
-      walk = os.walk(module_path)
-      for root, dirs, files in walk:
-        if 'node_modules' in dirs:
-          dirs.remove('node_modules')
-        for file_name in files:
-          basename = os.path.basename(file_name)
-          if not file_name.endswith('.js') or basename == 'index.js':
-            continue
-          full_path = os.path.join(root, file_name)
-          rel_path = os.path.relpath(full_path, module_path)
-          files_to_return.append(os.path.join(dependency, rel_path))
-    return files_to_return
 
 class appRequireDocCommand(sublime_plugin.TextCommand):
   def run(self, edit):
@@ -258,9 +240,9 @@ class appRequireInsertHelper(sublime_plugin.TextCommand):
 
     count=0;
     while count<100: #avoid infinate loop
-      match = re.match(specialChar, module);
+      match = re.search(specialChar, module);
       if (match):
-        module = match.group(1) + match.group(3).upper() + match.group(4);
+        module = match.group(1) + match.group(2) + match.group(4).upper() + match.group(5);
         count+=1;
       else:
         break;

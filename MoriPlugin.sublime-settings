@@ -40,6 +40,12 @@
     "s3mirror"
   ],
 
+  "extensions": [
+    ".js",
+    ".jsx",
+    ".svg"
+  ],
+
   "alias": {
     ".*(Db)(?:[A-Z]|$)+.*": ["DB"],
     "^((?:Client)?(?:Server)?)Util$": [""],
