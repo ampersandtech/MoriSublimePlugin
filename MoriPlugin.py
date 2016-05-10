@@ -23,18 +23,11 @@ SETTINGS_FILE = "MoriPlugin.sublime-settings";
 
 extensions = sublime.load_settings(SETTINGS_FILE).get("extensions");
 cores = sublime.load_settings(SETTINGS_FILE).get("core_modules");
-aliasCheck = sublime.load_settings(SETTINGS_FILE).get("alias");
 prefix = sublime.load_settings(SETTINGS_FILE).get("prefix");
 exclude = sublime.load_settings(SETTINGS_FILE).get("excludeDirs");
 
-if aliasCheck:
-  for alias in aliasCheck:
-    aliasCheck[alias] = {
-      "regex": re.compile(alias),
-      "changes": aliasCheck[alias],
-    }
-else:
-  aliasCheck = [];
+def get_pref(pref):
+  return sublime.load_settings(SETTINGS_FILE).get(pref);
 
 class ModuleLoader():
   def __init__(self, file_name):
@@ -131,7 +124,7 @@ class ModuleLoader():
     );
 
     for i in range(0,len(cores), 1):
-      dependencies.append([cores[i], 'core module']);
+      dependencies.append([cores[i], cores[i]]);
 
     return dependencies;
 
@@ -144,9 +137,9 @@ class ModuleLoader():
                 for key in keys:
                   listingElement = [element for element in dependencies if element[0] == key]
                   if len(listingElement):
-                    listingElement[0][1] += ', ' + dependency_types[dependency_type];
+                    continue;
                   else:
-                    dependencies.append([key, dependency_types[dependency_type]]);
+                    dependencies.append([key, key]);
         return dependencies
 
 class appRequireDocCommand(sublime_plugin.TextCommand):
@@ -157,7 +150,7 @@ class appRequireDocCommand(sublime_plugin.TextCommand):
       self.files, self.on_done_call_func(self.files, self.insertAppRequire));
 
   def insertAppRequire(self, fileEntry):
-    module = fileEntry[0];
+    module = fileEntry[1];
     pos = self.view.find("^'use strict';$", 0).end();
 
     if pos == -1:
@@ -271,6 +264,14 @@ class appRequireInsertHelper(sublime_plugin.TextCommand):
       module = module[0].upper() + module[1:];
     
     #check for any alias
+    aliasCheck = get_pref('alias');
+
+    for alias in aliasCheck:
+      aliasCheck[alias] = {
+        "regex": re.compile(alias),
+        "changes": aliasCheck[alias],
+      }
+
     for alias in aliasCheck:
       m = re.match(aliasCheck[alias]["regex"], module);
       if m:
