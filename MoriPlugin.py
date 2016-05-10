@@ -21,20 +21,20 @@ specialChar = re.compile("([^\W\d_]+)(\d*)([\W_]?)([\w]?)(.*)");
 
 SETTINGS_FILE = "MoriPlugin.sublime-settings";
 
-settings = sublime.load_settings(SETTINGS_FILE);
+extensions = sublime.load_settings(SETTINGS_FILE).get("extensions");
+cores = sublime.load_settings(SETTINGS_FILE).get("core_modules");
+aliasCheck = sublime.load_settings(SETTINGS_FILE).get("alias");
+prefix = sublime.load_settings(SETTINGS_FILE).get("prefix");
+exclude = sublime.load_settings(SETTINGS_FILE).get("excludeDirs");
 
-if settings:
-  extensions = sublime.load_settings(SETTINGS_FILE).get("extensions");
-  cores = sublime.load_settings(SETTINGS_FILE).get("core_modules");
-  aliasCheck = sublime.load_settings(SETTINGS_FILE).get("alias");
-  prefix = sublime.load_settings(SETTINGS_FILE).get("prefix");
-  exclude = sublime.load_settings(SETTINGS_FILE).get("excludeDirs");
-
-for alias in aliasCheck:
-  aliasCheck[alias] = {
-    "regex": re.compile(alias),
-    "changes": aliasCheck[alias],
-  }
+if aliasCheck:
+  for alias in aliasCheck:
+    aliasCheck[alias] = {
+      "regex": re.compile(alias),
+      "changes": aliasCheck[alias],
+    }
+else:
+  aliasCheck = [];
 
 class ModuleLoader():
   def __init__(self, file_name):
