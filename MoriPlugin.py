@@ -21,11 +21,6 @@ specialChar = re.compile("([^\W\d_]+)(\d*)([\W_]?)([\w]?)(.*)");
 
 SETTINGS_FILE = "MoriPlugin.sublime-settings";
 
-extensions = sublime.load_settings(SETTINGS_FILE).get("extensions");
-cores = sublime.load_settings(SETTINGS_FILE).get("core_modules");
-prefix = sublime.load_settings(SETTINGS_FILE).get("prefix");
-exclude = sublime.load_settings(SETTINGS_FILE).get("excludeDirs");
-
 def get_pref(pref):
   return sublime.load_settings(SETTINGS_FILE).get(pref);
 
@@ -86,6 +81,7 @@ class ModuleLoader():
     dirname = os.path.dirname(self.file_name)
     for root, dirs, files in os.walk(self.project_folder, topdown=True):
       if os.path.samefile(root, self.project_folder):
+        exclude = get_pref('excludeDirs');
         dirs[:] = [d for d in dirs if d not in exclude]
 
       for file_name in files:
@@ -103,7 +99,7 @@ class ModuleLoader():
           continue;
 
         ext = os.path.splitext(file_name)[1];
-        if not ext in extensions:
+        if not ext in get_pref('extensions'):
           continue;
 
         local_files.append([os.path.basename(file_name), file_name])
@@ -123,6 +119,7 @@ class ModuleLoader():
       dependency_types, package_json
     );
 
+    cores = get_pref('core_modules');
     for i in range(0,len(cores), 1):
       dependencies.append([cores[i], cores[i]]);
 
@@ -161,6 +158,7 @@ class appRequireDocCommand(sublime_plugin.TextCommand):
     lastGoodPos = pos;
     pad = 0;
 
+    cores = get_pref('core_modules');
     isCore = module in cores;
 
     while (pos < self.view.size()):
@@ -258,6 +256,7 @@ class appRequireInsertHelper(sublime_plugin.TextCommand):
       else:
         break;
 
+    cores = get_pref('core_modules');
     inCore = module in cores;
     if inCore == False:
       #cap first letter of any dependencies or files
@@ -279,6 +278,7 @@ class appRequireInsertHelper(sublime_plugin.TextCommand):
           module = module[:m.start(i+1)] + aliasCheck[alias]["changes"][i] + module[m.end(i+1):];
         break;
     
+    prefix = get_pref('prefix');
     if ext in prefix:
       module = prefix[ext] + module;
 
@@ -317,6 +317,7 @@ class appRequireInsertHelper(sublime_plugin.TextCommand):
     else:
       tabs = '';
 
+    cores = get_pref('core_modules');
     if module in cores:
       reqLine = reqLowerTabbed;
     else:
