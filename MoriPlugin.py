@@ -21,10 +21,14 @@ specialChar = re.compile("([^\W\d_]+)(\d*)([\W_]?)([\w]?)(.*)");
 
 SETTINGS_FILE = "MoriPlugin.sublime-settings";
 
-extensions = sublime.load_settings(SETTINGS_FILE).get("extensions");
-cores = sublime.load_settings(SETTINGS_FILE).get("core_modules");
-aliasCheck = sublime.load_settings(SETTINGS_FILE).get("alias");
-prefix = sublime.load_settings(SETTINGS_FILE).get("prefix");
+settings = sublime.load_settings(SETTINGS_FILE);
+
+if settings:
+  extensions = sublime.load_settings(SETTINGS_FILE).get("extensions");
+  cores = sublime.load_settings(SETTINGS_FILE).get("core_modules");
+  aliasCheck = sublime.load_settings(SETTINGS_FILE).get("alias");
+  prefix = sublime.load_settings(SETTINGS_FILE).get("prefix");
+  exclude = sublime.load_settings(SETTINGS_FILE).get("excludeDirs");
 
 for alias in aliasCheck:
   aliasCheck[alias] = {
@@ -87,7 +91,6 @@ class ModuleLoader():
       return []
 
     dirname = os.path.dirname(self.file_name)
-    exclude = sublime.load_settings(SETTINGS_FILE).get("excludeDirs");
     for root, dirs, files in os.walk(self.project_folder, topdown=True):
       if os.path.samefile(root, self.project_folder):
         dirs[:] = [d for d in dirs if d not in exclude]
