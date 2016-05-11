@@ -239,6 +239,9 @@ class appRequireCommand(sublime_plugin.TextCommand):
 
 class appRequireInsertHelper(sublime_plugin.TextCommand):
   def varNameFromModule(self, module):
+    cores = get_pref('core_modules');
+    inCore = module in cores;
+    
     ext = os.path.splitext(module)[1];
 
     if (module.rfind('/') != -1):
@@ -256,8 +259,7 @@ class appRequireInsertHelper(sublime_plugin.TextCommand):
       else:
         break;
 
-    cores = get_pref('core_modules');
-    inCore = module in cores;
+    
     if inCore == False:
       #cap first letter of any dependencies or files
       module = module[0].upper() + module[1:];
