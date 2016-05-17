@@ -49,7 +49,8 @@
   "alias": {
     ".*(Db)(?:[A-Z]|$)+.*": ["DB"],
     "^((?:Client)?(?:Server)?)Util$": [""],
-    "^Log(Common)$": [""]
+    "^Log(Common)$": [""],
+    "^React(Dom)$": ["DOM"]
   },
 
   "prefix": {
