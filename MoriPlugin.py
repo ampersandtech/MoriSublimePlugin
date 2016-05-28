@@ -10,10 +10,10 @@ import json
 import sublime, sublime_plugin
 
 HAS_REL_PATH_RE = re.compile(r"\.?\.?\/");
-reqUpperTabbed = re.compile("(?:\/\/)?(?:\/\*)?(?: )*var [A-Z]\w*(?: )=(?: )(?:app)?[rR]equire\('[^ ']*'\);(?: *)(?:\*\/)?(?: *)");
-reqLowerTabbed = re.compile("(?:\/\/)?(?:\/\*)?(?: )*var [a-z]\w*(?: )=(?: )(?:app)?[rR]equire\('[^ ']*'\);(?: *)(?:\*\/)?(?: *)");
-reqUpper = re.compile("(?:\/\/ *)?(?:\/\* *)?var [A-Z]\w*(?: )=(?: )(?:app)?[rR]equire\('[^ ']*'\);(?: *)(?:\*\/)?(?: *)");
-reqLower = re.compile("(?:\/\/ *)?(?:\/\* *)?var [a-z]\w*(?: )=(?: )(?:app)?[rR]equire\('[^ ']*'\);(?: *)(?:\*\/)?(?: *)");
+reqUpperTabbed = re.compile("(?:\/\/)?(?:\/\*)?(?: )*var [A-Z]\w*(?: )=(?: )(?:app)?[rR]equire\('[^ ']*'\)(?:\.[\w]*)?;(?: *)(?:\*\/)?(?: *)");
+reqLowerTabbed = re.compile("(?:\/\/)?(?:\/\*)?(?: )*var [a-z]\w*(?: )=(?: )(?:app)?[rR]equire\('[^ ']*'\)(?:\.[\w]*)?;(?: *)(?:\*\/)?(?: *)");
+reqUpper = re.compile("(?:\/\/ *)?(?:\/\* *)?var [A-Z]\w*(?: )=(?: )(?:app)?[rR]equire\('[^ ']*'\)(?:\.[\w]*)?;(?: *)(?:\*\/)?(?: *)");
+reqLower = re.compile("(?:\/\/ *)?(?:\/\* *)?var [a-z]\w*(?: )=(?: )(?:app)?[rR]equire\('[^ ']*'\)(?:\.[\w]*)?;(?: *)(?:\*\/)?(?: *)");
 esLintLine = re.compile("^\/\* eslint-disable.*\*\/$");
 reqName = re.compile(".*var (\w*).*");
 tabLength = re.compile("^( *).*$");
