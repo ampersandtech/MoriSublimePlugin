@@ -8,6 +8,7 @@ import os
 import re
 import json
 import sublime, sublime_plugin
+import time
 
 HAS_REL_PATH_RE = re.compile(r"\.?\.?\/");
 reqUpperTabbed = re.compile("(?:\/\/)?(?:\/\*)?(?: )*var [A-Z]\w*(?: )=(?: )(?:app)?[rR]equire\('[^ ']*'\)(?:\.[\w]*)?;(?: *)(?:\*\/)?(?: *)");
@@ -372,3 +373,6 @@ class appRequireInsertHelper(sublime_plugin.TextCommand):
     else:
       self.view.insert(edit, pos, entry);
 
+class insertMoriCopyright(sublime_plugin.TextCommand):
+  def run (self, edit):
+    self.view.insert(edit, 0, "/**\n * Copyright " + time.strftime('%Y') + "-present Mori, Inc.\n *\n */\n'use strict';");
