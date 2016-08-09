@@ -50,7 +50,8 @@
     ".*(Db)(?:[A-Z]|$)+.*": ["DB"],
     "^((?:Client)?(?:Server)?)Util$": [""],
     "^Log(Common)$": [""],
-    "^React(Dom)$": ["DOM"]
+    "^React(Dom)$": ["DOM"],
+    "^(Cs)[A-Z].*": ["CS"]
   },
 
   "prefix": {
