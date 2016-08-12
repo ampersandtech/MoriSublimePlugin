@@ -167,13 +167,10 @@ class appRequireDocCommand(sublime_plugin.TextCommand):
       line = self.view.substr(area);
 
       if isCore:
-        print('isCore');
         if re.match(reqLower, line):
-          print('matched lower', line);
           break;
 
         if re.match(reqUpper, line):
-          print('matched upper', line);
           pos = lastGoodPos;
           pad = 1;
           break;
@@ -219,7 +216,7 @@ class appRequireCommand(sublime_plugin.TextCommand):
       self.files, self.on_done_call_func(self.files, self.insertAppRequire));
 
   def insertAppRequire(self, fileEntry):
-    module = fileEntry[0];
+    module = fileEntry[1];
     self.view.run_command('app_require_insert_helper', {
       'args': {
         'module': module,
