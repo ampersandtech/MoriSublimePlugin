@@ -17,6 +17,14 @@ Will not move your cursor or view.
 provides a dropdown of local files and dependencies defined in package.json.
 MoriSublimePlug will insert the appRequire / require line at the cursor position.
 
+######'ctrl+shift+x' => global module export
+
+![alt tag](https://raw.githubusercontent.com/overlookdev/MoriSublimePlugin/master/images/ctrlShiftX.gif)
+
+provies a dropdown of all global functions and varables.
+MoriSublimePlugin will insert the export line at the bottom of the file, with all other export lines.
+Will not move your cursor or view.
+
 ######'ctrl+shift+c' => insert copyright header
 
 inserts the required copyright header into the top of the document, as well as the 'use strict'; line.
