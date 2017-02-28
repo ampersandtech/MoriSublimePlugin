@@ -19,6 +19,8 @@ esLintLine = re.compile("^\/\* eslint-disable.*\*\/$");
 reqName = re.compile(".*var (\w*).*");
 tabLength = re.compile("^( *).*$");
 specialChar = re.compile("([^\W\d_]+)(\d*)([\W_]?)([\w]?)(.*)");
+globalExportLine = re.compile("^(var|function) ([\w]*)");
+moduleExportLine = re.compile("(module\.)?exports\.[\w]* ?= ?([\w]*);");
 
 SETTINGS_FILE = "MoriPlugin.sublime-settings";
 
@@ -373,3 +375,67 @@ class appRequireInsertHelper(sublime_plugin.TextCommand):
 class insertMoriCopyright(sublime_plugin.TextCommand):
   def run (self, edit):
     self.view.insert(edit, 0, "/**\n * Copyright " + time.strftime('%Y') + "-present Mori, Inc.\n *\n */\n'use strict';");
+
+class insertExportLine(sublime_plugin.TextCommand):
+  def run (self, edit):
+    view = self.view;
+    size = view.size();
+    pos = 0;
+    lineNum = 1;
+    lines = [];
+
+    while pos < size:
+      area = self.view.line(pos);
+      line = self.view.substr(area);
+      match = re.match(globalExportLine, line);
+      if (match and line.find('appRequire') == -1 and line.find('require') == -1):
+        lines.append([match.group(2), str(lineNum) + ': ' +line]);
+      pos += area.size()+1;
+      lineNum += 1;
+
+    sublime.active_window().show_quick_panel(
+      lines, self.on_done_call_func(lines, self.insertExportLine));
+
+  def on_done_call_func(self, choices, func):
+    """Return a function which is used with sublime list picking."""
+    def on_done(index):
+        if index >= 0:
+            return func(choices[index])
+
+    return on_done
+
+  def insertExportLine(self, line):
+    self.view.run_command('export_insert_helper', {
+      'args': {
+        'export': line[0],
+      }
+    });
+
+class exportInsertHelper(sublime_plugin.TextCommand):
+  def run (self, edit, args):
+    toExport = args['export'];
+    view = self.view;
+    size = view.size();
+    pos = 0;
+    lastExportPos = size;
+    useModule = False;
+    
+    while pos < size:
+      area = self.view.line(pos);
+      line = self.view.substr(area);
+      match = re.match(moduleExportLine, line);
+      
+      if (match):
+        lastExportPos = area.end();
+        if (match.group(2) == toExport):
+          return;
+        if (match.group(1)):
+          useModule = True;
+      pos = area.end()+1;
+
+    if (useModule):
+      toExport = '\nmodule.exports.' + toExport + ' = ' + toExport + ';';
+    else:
+      toExport = '\nexports.' + toExport + ' = ' + toExport + ';';
+
+    self.view.insert(edit, lastExportPos, toExport);

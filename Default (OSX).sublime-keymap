@@ -11,4 +11,8 @@
     "keys": ["ctrl+shift+c"],
     "command": "insert_mori_copyright"
   },
+  {
+    "keys": ["ctrl+shift+x"],
+    "command": "insert_export_line"
+  },
 ]
