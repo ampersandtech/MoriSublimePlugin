@@ -383,18 +383,25 @@ class insertExportLine(sublime_plugin.TextCommand):
     pos = 0;
     lineNum = 1;
     lines = [];
+    cursor = self.view.sel();
+    select = 0;
 
     while pos < size:
       area = self.view.line(pos);
       line = self.view.substr(area);
       match = re.match(globalExportLine, line);
       if (match and line.find('appRequire') == -1 and line.find('require') == -1):
+        c=0;
+        while c<len(cursor):
+          if (area.intersects(cursor[c])):
+            select = len(lines);
+          c += 1;
         lines.append([match.group(2), str(lineNum) + ': ' +line]);
       pos += area.size()+1;
       lineNum += 1;
 
     sublime.active_window().show_quick_panel(
-      lines, self.on_done_call_func(lines, self.insertExportLine));
+      lines, self.on_done_call_func(lines, self.insertExportLine), 0, select);
 
   def on_done_call_func(self, choices, func):
     """Return a function which is used with sublime list picking."""
